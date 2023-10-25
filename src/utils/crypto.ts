@@ -4,6 +4,7 @@ config()
 
 //viết 1 hàm nhận vào 1 chuỗi và mã hóa chuỗi đó bằng thuật toán SHA256
 //đặc trưng của thuật toán này là mã hóa 1 chiều, không thể giải mã
+//hàm nhận vào 1 chuỗi và trả về 1 chuỗi đã mã hóa
 function sha256(content: string) {
   return createHash('sha256').update(content).digest('hex')
 }

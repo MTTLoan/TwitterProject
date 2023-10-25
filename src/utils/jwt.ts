@@ -7,13 +7,15 @@ export const signToken = ({
   privateKey = process.env.JWT_SECRET as string, //giá trị mặc định
   options = { algorithm: 'HS256' }
 }: {
-  payload: any | object | Buffer
+  payload: string | object | Buffer
   privateKey?: string
   options?: jwt.SignOptions
 }) => {
   return new Promise<string>((resolve, reject) => {
     jwt.sign(payload, privateKey, options, (err, token) => {
-      if (err) reject(err)
+      if (err) {
+        reject(err)
+      }
       resolve(token as string)
     })
   })

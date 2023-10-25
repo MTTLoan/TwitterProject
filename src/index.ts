@@ -5,7 +5,7 @@ import databaseService from './services/database.services'
 const app = express()
 app.use(express.json()) //sửa lỗi 500
 
-const PORT = 5000
+const PORT = 3000
 databaseService.connect() //kết nối đến database.service.ts
 
 // localhost:3000/

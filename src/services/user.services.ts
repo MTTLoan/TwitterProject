@@ -10,23 +10,25 @@ config()
 
 class UsersService {
   //viết hàm nhận vào user_id để bỏ vào payload tạo access token
-  signAccessToken(user_id: string) {
+  private signAccessToken(user_id: string) {
     return signToken({
       payload: { user_id, token_type: TokenType.AccessToken },
-      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRED_TIME }
+      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN }
     })
   }
 
   //viết hàm nhận vào user_id để bỏ vào payload tạo refresh token
-  signRefreshToken(user_id: string) {
+  private signRefreshToken(user_id: string) {
     return signToken({
       payload: { user_id, token_type: TokenType.RefreshToken },
-      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRED_TIME }
+      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
     })
   }
 
   async checkEmailExist(email: string) {
-    const user = await databaseService.users.findOne({ email })
+    // tìm trong database xem có user nào có email này chưa -> nếu có trả về object user, nếu ko có trả về null
+    const user = await databaseService.users.findOne({ email /*: email --> giống nên bỏ đi*/ })
+    // -> ép kiểu về boolean (object -> true, null -> false)
     return Boolean(user)
   }
 

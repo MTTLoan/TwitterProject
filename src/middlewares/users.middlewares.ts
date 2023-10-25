@@ -68,7 +68,7 @@ export const registerValidator = validate(
           minUppercase: 1,
           minNumbers: 1,
           minSymbols: 1
-          // returnScore: true
+          // returnScore: true //trả về điểm số
         }
       },
       errorMessage:
@@ -96,8 +96,10 @@ export const registerValidator = validate(
       errorMessage:
         'confirm password must be at least 8 chars long, contain at least 1 lowercase, 1 uppercase, 1 number and 1 symbol',
       custom: {
+        // kiểm tra xem confirm password có trùng với password hay không
         options: (value, { req }) => {
           if (value !== req.body.password) {
+            // ném lỗi ra chỗ tập trung xử lý lỗi
             throw new Error('confirm password does not match')
           }
           return true
