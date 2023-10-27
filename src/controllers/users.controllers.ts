@@ -15,7 +15,7 @@ export const loginController = async (req: Request, res: Response) => {
   const result = await usersService.login(user_id.toString())
   //response về access token và refresh token cho client
   res.json({
-    message: USERS_MESSAGES.LOGIN_SUCCESS, 
+    message: USERS_MESSAGES.LOGIN_SUCCESS,
     result
   })
 }
@@ -25,5 +25,11 @@ export const registerController = async (req: Request<ParamsDictionary, any, Reg
   res.json({
     message: USERS_MESSAGES.REGISTER_SUCCESS,
     result
+  })
+}
+
+export const logoutController = async (req: Request, res: Response) => {
+  res.json({
+    message: 'Logout successfully'
   })
 }
