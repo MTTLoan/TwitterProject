@@ -1,6 +1,7 @@
-import express from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import usersRouter from './routes/users.routes'
 import databaseService from './services/database.services'
+import { defaultErrorHandler } from './middlewares/error.middlewares'
 
 const app = express()
 app.use(express.json()) //sửa lỗi 500
@@ -16,6 +17,7 @@ app.get('/', (req, res) => {
 app.use('/users', usersRouter)
 // localhost:3000/users
 
+app.use(defaultErrorHandler)
 app.listen(PORT, () => {
   console.log(`Project twitter này đang chạy trên post ${PORT}`)
 })

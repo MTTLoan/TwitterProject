@@ -1,10 +1,18 @@
 import { Router } from 'express'
+import { wrap } from 'module'
 
 import { loginController, registerController } from '~/controllers/users.controllers'
 import loginValidator, { registerValidator } from '~/middlewares/users.middlewares'
+import { wrapAsync } from '~/utils/handlers'
 
 const usersRouter = Router()
 
+/*
+des: đăng nhập
+path: /users/login
+method: POST
+body: {email, password}
+*/
 usersRouter.get('/login', loginValidator, loginController)
 
 /*
@@ -12,31 +20,13 @@ Description: Đăng ký tài khoản
 Path: /users/register
 Method: POST
 body: {
+    name: string,
     email: string,
     password: string,
     confirm_password: string,
     date_of_birth: string,
 }
  */
-usersRouter.post(
-  '/register',
-  registerValidator,
-  (req, res, next) => {
-    console.log('request handler 1')
-    next(new Error('lỗi chà bá'))
-  },
-  (req, res, next) => {
-    console.log('request handler 2')
-    next()
-  },
-  (req, res, next) => {
-    console.log('request handler 3')
-    res.json({ message: 'successful' })
-  },
-  (err, req, res, next) => {
-    console.log('error handler')
-    res.status(400).json({ message: err.message })
-  }
-)
+usersRouter.post('/register', registerValidator, wrapAsync(registerController))
 
 export default usersRouter
