@@ -3,6 +3,7 @@ import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb'
 import { config } from 'dotenv'
 config()
 import User from '~/models/schemas/User.schema'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
 
 const uri = `mongodb+srv://${process.env.DB_USENAME}:${process.env.DB_PASSWORD}@tweetprj.5o14tur.mongodb.net/?retryWrites=true&w=majority`
 
@@ -28,6 +29,10 @@ class DatabaseService {
   //định nghĩa Collection<User> để khi dùng tự gender ra thuộc tính users
   get users(): Collection<User> {
     return this.db.collection(process.env.DB_USERS_COLLECTION as string) //chắc chắn là string
+  }
+
+  get refreshTokens(): Collection<RefreshToken> {
+    return this.db.collection(process.env.DB_REFRESH_TOKENS_COLLECTION as string) //chắc chắn là string
   }
 }
 

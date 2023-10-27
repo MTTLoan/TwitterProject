@@ -13,7 +13,7 @@ path: /users/login
 method: POST
 body: {email, password}
 */
-usersRouter.get('/login', loginValidator, loginController)
+usersRouter.get('/login', loginValidator, wrapAsync(loginController))
 
 /*
 Description: Đăng ký tài khoản
@@ -28,5 +28,6 @@ body: {
 }
  */
 usersRouter.post('/register', registerValidator, wrapAsync(registerController))
+
 
 export default usersRouter
