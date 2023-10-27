@@ -213,7 +213,7 @@ export const accessTokenValidator = validate(
               //nếu có access token thì mình phải verify nó
               const decoded_authorization = await verifyToken({ token: accessToken })
               //lấy ra decoded_authorization(payload), lưu vào req để dùng dần
-              req.decoded_authorization = decoded_authorization
+              ;(req as Request).decoded_authorization = decoded_authorization
             } catch (error) {
               throw new ErrorWithStatus({
                 message: capitalize((error as JsonWebTokenError).message), //chắc lỗi này của jwt
@@ -229,6 +229,51 @@ export const accessTokenValidator = validate(
   )
 )
 
-export const refreshTokenValidator = validate(checkSchema({}))
+export const refreshTokenValidator = validate(
+  checkSchema(
+    {
+      refresh_token: {
+        trim: true,
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            //verify refresh_token để lấy decoded_refresh_token
+            try {
+              //chạy 2 hành động cùng 1 lúc: kiểm tra verifyToken và tìm refresh_token trong database
+              const [decoded_refresh_token, refresh_token] = await Promise.all([
+                verifyToken({ token: value }),
+                databaseService.refreshTokens.findOne({
+                  token: value
+                })
+              ])
+
+              if (refresh_token === null) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.USER_REFRESH_TOKEN_OR_NOT_EXIST,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+
+              //lưu decoded_refresh_token vào req để dùng dần
+              ;(req as Request).decoded_refresh_token = decoded_refresh_token
+            } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: capitalize((error as JsonWebTokenError).message), //chắc lỗi này của jwt
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+              throw error
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
 
 export default loginValidator
