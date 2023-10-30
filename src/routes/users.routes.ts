@@ -1,9 +1,11 @@
-import { Router } from 'express'
-import { loginController, logoutController, registerController } from '~/controllers/users.controllers'
+import { verify } from 'crypto'
+import e, { Router } from 'express'
+import { emailVerifyController, loginController, logoutController, registerController } from '~/controllers/users.controllers'
 import loginValidator, {
   accessTokenValidator,
   refreshTokenValidator,
-  registerValidator
+  registerValidator,
+  verifyEmailValidator
 } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
 
@@ -39,4 +41,17 @@ header: {Authorization: 'Bearer <access_token>'}
 body: {refresh_token: string}
 */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController))
+
+/*
+des: verify email 
+khi người dùng đăng ký, trong email có 1 link, nếu ng dùng nhấn vào cái link trong email,
+họ sẽ gữi lên email_verify_token để ta kiểm tra, tìm kiếm user đó và update account của họ
+thành verify, đồng thời gữi at rf cho họ đăng nhập luôn, k cần login
+path: /users/verify-email
+method: POST
+không cần Header vì chưa đăng nhập vẫn có thể verify-email
+body: {email_verify_token: string}
+*/
+usersRouter.post('/verify-email', verifyEmailValidator, wrapAsync(emailVerifyController))
+
 export default usersRouter

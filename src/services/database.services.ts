@@ -1,4 +1,4 @@
-import { MongoClient, ServerApiVersion, Db, Collection } from 'mongodb'
+import { MongoClient, Db, Collection } from 'mongodb'
 //liên kết đến file .env
 import { config } from 'dotenv'
 config()

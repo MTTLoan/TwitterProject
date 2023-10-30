@@ -1,11 +1,18 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import User from '~/models/schemas/User.schema'
-import databaseService from '~/services/database.services'
 import usersService from '~/services/user.services'
 import { ParamsDictionary } from 'express-serve-static-core'
-import { LoginReqBody, LogoutReqBody, RegisterReqBody } from '~/models/requests/User.requests'
+import {
+  EmailVerifyReqBody,
+  LoginReqBody,
+  LogoutReqBody,
+  RegisterReqBody,
+  TokenPayload
+} from '~/models/requests/User.requests'
 import { ObjectId } from 'mongodb'
 import { USERS_MESSAGES } from '~/constants/messages'
+import databaseService from '~/services/database.services'
+import HTTP_STATUS from '~/constants/httpStatus'
 
 export const loginController = async (req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) => {
   //lấy user_id từ user của request
@@ -33,4 +40,33 @@ export const logoutController = async (req: Request<ParamsDictionary, any, Logou
   //logout nhận vào refresh token để tìm và xóa refresh token đó trong database
   const result = await usersService.logout(refresh_token)
   res.json(result)
+}
+
+export const emailVerifyController = async (req: Request<ParamsDictionary, any, EmailVerifyReqBody>, res: Response) => {
+  //khi mà req vào đc đây nghĩa là email_verify_token đã valid
+  //đồng thời trong req cũng có decoded_email_verify_token
+  const { user_id } = req.decoded_email_verify_token as TokenPayload
+  //tìm xem có user có mã user_id này không
+  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+  if (!user) {
+    //nếu không có thì báo lỗi
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      message: USERS_MESSAGES.USER_NOT_FOUND
+    })
+  }
+  //nếu có thì mk sẽ kiểm tra xem user này lưu email_verify_token hay không
+  if (user.email_verify_token === '') {
+    //nếu không lưu thì báo lỗi
+    return res.json({
+      message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE
+    })
+  }
+  //nếu xuống đc đây thì nghĩa là user này là có và chưa verify
+  //verify email là tìm user đó bằng user_id và update email_verify_token = null và verify = 1
+  //viết hàm verifyEmail(user_id)
+  const result = await usersService.verifyEmail(user_id)
+  return res.json({
+    message: USERS_MESSAGES.EMAIL_VERIFY_SUCCESS,
+    result
+  })
 }
