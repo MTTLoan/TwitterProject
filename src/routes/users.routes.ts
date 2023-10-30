@@ -1,6 +1,12 @@
 import { verify } from 'crypto'
 import e, { Router } from 'express'
-import { emailVerifyController, loginController, logoutController, registerController } from '~/controllers/users.controllers'
+import {
+  emailVerifyController,
+  loginController,
+  logoutController,
+  registerController,
+  resendEmailVerifyController
+} from '~/controllers/users.controllers'
 import loginValidator, {
   accessTokenValidator,
   refreshTokenValidator,
@@ -53,5 +59,14 @@ không cần Header vì chưa đăng nhập vẫn có thể verify-email
 body: {email_verify_token: string}
 */
 usersRouter.post('/verify-email', verifyEmailValidator, wrapAsync(emailVerifyController))
+
+/*
+des:gữi lại verify email khi người dùng nhấn vào nút gữi lại email,
+path: /resend-verify-email
+method: POST
+Header:{Authorization: Bearer <access_token>} //đăng nhập mới cho resend email verify
+body: {}
+*/
+usersRouter.post('/resend-verify-email', accessTokenValidator, wrapAsync(resendEmailVerifyController))
 
 export default usersRouter
