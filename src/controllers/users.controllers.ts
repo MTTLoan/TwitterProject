@@ -9,7 +9,9 @@ import {
   LogoutReqBody,
   RegisterReqBody,
   ResetPasswordReqBody,
-  TokenPayload
+  TokenPayload,
+  UpdateMeReqBody,
+  getProfileReqParams
 } from '~/models/requests/User.requests'
 import { ObjectId } from 'mongodb'
 import { USERS_MESSAGES } from '~/constants/messages'
@@ -135,6 +137,29 @@ export const getMeController = async (req: Request, res: Response) => {
   const user = await usersService.getMe(user_id)
   return res.json({
     message: USERS_MESSAGES.GET_ME_SUCCESS,
+    result: user
+  })
+}
+
+export const updateMeController = async (req: Request<ParamsDictionary, any, UpdateMeReqBody>, res: Response) => {
+  //muốn cập nhật thông tin của user thì cần user_id và thông tin mới
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const { body } = req
+  //cập nhật thông tin mới cho user có user_id này
+  const result = await usersService.updateMe(user_id, body)
+  return res.json({
+    message: USERS_MESSAGES.UPDATE_ME_SUCCESS,
+    result
+  })
+}
+
+export const getProfileController = async (req: Request<getProfileReqParams>, res: Response) => {
+  //muốn lấy thông tin của user thì cần username
+  const { username } = req.params
+  //tiến hành vào database tìm user có username này và lấy thông tin
+  const user = await usersService.getProfile(username)
+  return res.json({
+    message: USERS_MESSAGES.GET_PROFILE_SUCCESS,
     result: user
   })
 }
