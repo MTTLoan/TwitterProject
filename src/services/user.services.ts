@@ -10,6 +10,8 @@ config()
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
 import { USERS_MESSAGES } from '~/constants/messages'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
 
 class UsersService {
   //viết hàm nhận vào user_id để bỏ vào payload tạo access token
@@ -169,9 +171,37 @@ class UsersService {
       }
     ])
     //mô phỏng gửi mail cho user đó
-    console.log('forgot_password_token: ', forgot_password_token);
+    console.log('forgot_password_token: ', forgot_password_token)
     //thông báo cho user là đã gửi mail thành công
     return { message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD_SUCCESS }
+  }
+
+  async resetPassword({ user_id, password }: { user_id: string; password: string }) {
+    //dựa vào user_id tìm và cập nhật
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, [
+      {
+        $set: {
+          password: hashPassword(password),
+          forgot_password_token: '',
+          updated_at: '$$NOW'
+        }
+      }
+    ])
+    return { message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS }
+  }
+
+  async getMe(user_id: string) {
+    const user = await databaseService.users.findOne(
+      { _id: new ObjectId(user_id) },
+      { projection: { password: 0, email_verify_token: 0, forgot_password_token: 0 } }
+    )
+    if (!user) {
+      return new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    } //TH ko xảy ra vì đã qua middleware checkAuthorization
+    return user
   }
 }
 

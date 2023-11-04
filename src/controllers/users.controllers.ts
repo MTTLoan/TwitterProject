@@ -8,6 +8,7 @@ import {
   LoginReqBody,
   LogoutReqBody,
   RegisterReqBody,
+  ResetPasswordReqBody,
   TokenPayload
 } from '~/models/requests/User.requests'
 import { ObjectId } from 'mongodb'
@@ -112,5 +113,28 @@ export const forgotPasswordController = async (
 export const verifyForgotPasswordTokenController = async (req: Request, res: Response) => {
   res.json({
     message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS
+  })
+}
+
+export const resetPasswordController = async (
+  req: Request<ParamsDictionary, any, ResetPasswordReqBody>,
+  res: Response
+) => {
+  //muốn cập nhật mật khẩu mới thì cần user_id, password mới
+  const { user_id } = req.decoded_forgot_password_token as TokenPayload
+  const { password } = req.body
+  //cập nhật mật khẩu mới cho user có user_id này
+  const result = await usersService.resetPassword({ user_id, password })
+  return res.json(result)
+}
+
+export const getMeController = async (req: Request, res: Response) => {
+  //muốn lấy thông tin của user thì cần user_id
+  const { user_id } = req.decoded_authorization as TokenPayload
+  //tìm user có user_id này và lấy thông tin
+  const user = await usersService.getMe(user_id)
+  return res.json({
+    message: USERS_MESSAGES.GET_ME_SUCCESS,
+    result: user
   })
 }
