@@ -1,17 +1,22 @@
 import { verify } from 'crypto'
-import e, { Router } from 'express'
+import { Router } from 'express'
 import {
   emailVerifyController,
+  forgotPasswordController,
   loginController,
   logoutController,
   registerController,
-  resendEmailVerifyController
+  resendEmailVerifyController,
+  verifyForgotPasswordTokenController
 } from '~/controllers/users.controllers'
-import loginValidator, {
+import {
+  loginValidator,
   accessTokenValidator,
+  forgotPasswordValidator,
   refreshTokenValidator,
   registerValidator,
-  verifyEmailValidator
+  verifyEmailValidator,
+  verifyForgotPasswordTokenValidator
 } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
 
@@ -68,5 +73,33 @@ Header:{Authorization: Bearer <access_token>} //đăng nhập mới cho resend e
 body: {}
 */
 usersRouter.post('/resend-verify-email', accessTokenValidator, wrapAsync(resendEmailVerifyController))
+
+/*
+des: forgot password
+khi người dùng quên mật khẩu thì họ sẽ gữi email lên cho ta
+mk sẽ xem có user nào có email đó k, nếu có thì mk sẽ tạo 1 forgot_password_token
+và gửi vào email cho họ để họ đổi mk
+path: /forgot-password
+method: POST
+Header: không cần, vì  ngta quên mật khẩu rồi, thì sao mà đăng nhập để có authen đc
+body: {email: string}
+*/
+usersRouter.post('/forgot-password', forgotPasswordValidator, wrapAsync(forgotPasswordController))
+
+/*
+des: verify forgot password token
+người dùng sau khi báo forgot password, họ sẽ nhận được 1 link trong email
+họ vào và click vào link đó, link đó sẽ có 1 request kèm theo forgot_password_token
+và gửi lên cho ta, ta sẽ kiểm tra xem token đó có hợp lệ hay không
+method: POST
+path: /users/verify-forgot-password
+body: {forgot_password_token: string}
+*/
+usersRouter.post(
+  '/verify-forgot-password',
+  verifyForgotPasswordTokenValidator,
+  wrapAsync(verifyForgotPasswordTokenController)
+)
+
 
 export default usersRouter

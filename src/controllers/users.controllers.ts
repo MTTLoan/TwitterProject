@@ -4,6 +4,7 @@ import usersService from '~/services/user.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import {
   EmailVerifyReqBody,
+  ForgotPasswordReqBody,
   LoginReqBody,
   LogoutReqBody,
   RegisterReqBody,
@@ -95,4 +96,21 @@ export const resendEmailVerifyController = async (req: Request, res: Response) =
   //tạo email_verify_token mới và lưu vào database
   const result = await usersService.resendEmailVerify(user_id)
   return res.json(result)
+}
+
+export const forgotPasswordController = async (
+  req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+  res: Response
+) => {
+  //vì đã qua forgotPasswordValidator nên trong req đã có user
+  const { _id } = req.user as User
+  //tiến hành tạo forgot_password_token mới và lưu vào database
+  const result = await usersService.forgotPassword((_id as ObjectId).toString())
+  return res.json(result)
+}
+
+export const verifyForgotPasswordTokenController = async (req: Request, res: Response) => {
+  res.json({
+    message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS
+  })
 }

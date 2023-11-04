@@ -8,9 +8,11 @@ import { Request, Response, NextFunction } from 'express'
 import { checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
+import { ObjectId } from 'mongodb'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
+import { TokenPayload } from '~/models/requests/User.requests'
 import databaseService from '~/services/database.services'
 import usersService from '~/services/user.services'
 import { hashPassword } from '~/utils/crypto'
@@ -73,13 +75,6 @@ export const loginValidator = validate(
   })
 )
 
-// Body: {
-//     name: string,
-//     email: string,
-//     password: string,
-//     confirm_password: string
-//     date_of_birth: ISO8601
-// }
 export const registerValidator = validate(
   checkSchema(
     {
@@ -311,4 +306,87 @@ export const verifyEmailValidator = validate(
   )
 )
 
-export default loginValidator
+export const forgotPasswordValidator = validate(
+  checkSchema({
+    email: {
+      notEmpty: {
+        errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
+      },
+      isEmail: {
+        errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+      },
+      trim: true,
+      custom: {
+        options: async (value, { req }) => {
+          //tìm user trong database
+          const user = await databaseService.users.findOne({ email: value })
+          //nếu ko có thì res lỗi
+          if (user === null) {
+            throw new Error(USERS_MESSAGES.USER_NOT_FOUND)
+          }
+          //lưu user vào req
+          req.user = user
+          return true
+        }
+      }
+    }
+  })
+)
+
+export const verifyForgotPasswordTokenValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            //nếu forgot_password_token ko gửi lên thì response lỗi
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            try {
+              const decoded_forgot_password_token = await verifyToken({
+                token: value,
+                secretOrPublicKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+              })
+
+              //lưu decoded_forgot_password_token vào req để dùng dần
+              ;(req as Request).decoded_forgot_password_token = decoded_forgot_password_token
+
+              //tìm user có user_id này
+              const { user_id } = decoded_forgot_password_token as TokenPayload
+              const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+              //nếu không có thì res lỗi
+              if (!user) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.USER_NOT_FOUND,
+                  status: HTTP_STATUS.NOT_FOUND
+                })
+              }
+              //nếu có thì xem thử user này có forgot_password_token giống thằng client gữi lên hay không
+              if (user.forgot_password_token !== value) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+            } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: capitalize((error as JsonWebTokenError).message), //chắc lỗi này của jwt
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+              throw error
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
