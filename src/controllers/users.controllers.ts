@@ -22,7 +22,7 @@ export const loginController = async (req: Request<ParamsDictionary, any, LoginR
   const user = req.user as User
   const user_id = user._id as ObjectId
   //dùng user_id tạo access token và refresh token
-  const result = await usersService.login(user_id.toString())
+  const result = await usersService.login({ user_id: user_id.toString(), verify: user.verify })
   //response về access token và refresh token cho client
   res.json({
     message: USERS_MESSAGES.LOGIN_SUCCESS,
@@ -104,9 +104,9 @@ export const forgotPasswordController = async (
   res: Response
 ) => {
   //vì đã qua forgotPasswordValidator nên trong req đã có user
-  const { _id } = req.user as User
+  const { _id, verify } = req.user as User
   //tiến hành tạo forgot_password_token mới và lưu vào database
-  const result = await usersService.forgotPassword((_id as ObjectId).toString())
+  const result = await usersService.forgotPassword({ user_id: (_id as ObjectId).toString(), verify })
   return res.json(result)
 }
 
