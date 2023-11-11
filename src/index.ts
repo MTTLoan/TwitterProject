@@ -6,7 +6,7 @@ import { defaultErrorHandler } from './middlewares/error.middlewares'
 const app = express()
 app.use(express.json()) //sửa lỗi 500
 
-const PORT = 3000
+const PORT = 4000
 databaseService.connect() //kết nối đến database.service.ts
 
 // localhost:3000/

@@ -4,6 +4,7 @@ import { config } from 'dotenv'
 config()
 import User from '~/models/schemas/User.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import { Follower } from '~/models/schemas/Followers.schema'
 
 const uri = `mongodb+srv://${process.env.DB_USENAME}:${process.env.DB_PASSWORD}@tweetprj.5o14tur.mongodb.net/?retryWrites=true&w=majority`
 
@@ -33,6 +34,10 @@ class DatabaseService {
 
   get refreshTokens(): Collection<RefreshToken> {
     return this.db.collection(process.env.DB_REFRESH_TOKENS_COLLECTION as string) //chắc chắn là string
+  }
+
+  get followers(): Collection<Follower> {
+    return this.db.collection(process.env.DB_FOLLOWERS_COLLECTION as string)
   }
 }
 
